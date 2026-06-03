@@ -60,6 +60,22 @@ export REMOTE_DIR="mydrive:folder/path"
 ./scripts/rclone-bisync.sh --dry-run
 ```
 
+## Cron
+
+定期実行する場合は [cron/rclone-bisync.cron](./cron/rclone-bisync.cron) を使う。
+デフォルトでは15分ごとに通常同期を実行し、ログを `LOG_FILE` に追記する。
+
+1. 環境変数を環境に合わせて修正する
+   - `LOCAL_DIR`, `REMOTE_DIR`, `LOG_FILE`
+2. 既存のCronタスクを確認する
+   ```shell
+   crontab -l
+   ```
+3. Cronタスクが存在しない場合、Cronを登録する
+   ```shell
+   crontab cron/rclone-bisync.cron
+   ```
+
 ## Recovery
 
 オプションを変更した場合や `Bisync aborted. Must run --resync to recover.` が出た場合は状態ファイルを作り直す。
