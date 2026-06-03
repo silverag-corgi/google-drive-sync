@@ -1,0 +1,14 @@
+# Install with:
+#   crontab cron/rclone-bisync.cron
+#
+# Adjust LOCAL_DIR, REMOTE_DIR, and LOG_FILE to match your environment before use.
+
+SHELL=/bin/bash
+PATH=/usr/local/bin:/usr/bin:/bin
+HOME=/home/silverag
+
+# LOCAL_DIR=/home/silverag/workspace/GoogleDrive
+# REMOTE_DIR=google-drive:
+LOG_FILE=/home/silverag/workspace/GoogleDriveLogs/rclone-bisync.log
+
+*/15 * * * * mkdir -p "$(dirname "$LOG_FILE")" && cd /home/silverag/workspace/Git/private/config/google-drive-sync/scripts && ./rclone-bisync.sh >> "$LOG_FILE" 2>&1
