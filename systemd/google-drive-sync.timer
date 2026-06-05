@@ -1,0 +1,10 @@
+[Unit]
+Description=Run Google Drive bisync every 15 minutes
+
+[Timer]
+OnCalendar=*:0/15
+Persistent=true
+Unit=google-drive-sync.service
+
+[Install]
+WantedBy=timers.target
