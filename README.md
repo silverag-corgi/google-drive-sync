@@ -11,6 +11,12 @@
   - `--dry-run` を付けると変更内容だけ確認して実際の同期はしない
   - `--create-empty-src-dirs` を付けると空ディレクトリも同期対象に含める
   - 引数なしでは2回目以降の通常同期を実行
+- `cron/rclone-bisync.cron`
+  - `cron` で15分ごとに通常同期するためのサンプル設定
+- `systemd/google-drive-sync.service`
+  - `systemd --user` から同期スクリプトを1回実行する unit
+- `systemd/google-drive-sync.timer`
+  - 15分ごとに `google-drive-sync.service` を起動する timer
 
 ## Behavior
 
@@ -75,6 +81,66 @@ export REMOTE_DIR="mydrive:folder/path"
    ```shell
    crontab cron/rclone-bisync.cron
    ```
+
+## systemd
+
+`cron` の代わりに `systemd --user` timer でも定期実行できる。
+ノートPCのスリープ復帰後にも取りこぼしを補いたい場合は、`Persistent=true` を使えるこちらが便利。
+
+前提:
+- `systemd --user` が使える Linux 環境であること
+
+1. unit ファイルを現在のリポジトリから link する
+   ```shell
+   systemctl --user link "$PWD/systemd/google-drive-sync.service"
+   systemctl --user link "$PWD/systemd/google-drive-sync.timer"
+   ```
+2. 環境変数ファイルをリポジトリ内に作成する
+   ```shell
+   cp systemd/google-drive-sync.env.sample systemd/google-drive-sync.env
+   ```
+3. `systemd/google-drive-sync.env` を環境に合わせて修正する
+   - `LOCAL_DIR` には絶対パスを書く
+   - `REMOTE_DIR` には `mydrive:` や `mydrive:folder/path` のような rclone remote を書く
+   - `WORKING_DIRECTORY` にはこのリポジトリの絶対パスを書く
+   - `EXEC_START` には `scripts/rclone-bisync.sh` の絶対パスを書く
+4. `systemd --user` 設定ディレクトリへシンボリックリンクを作成する
+   ```shell
+   ln -sfn "$PWD/systemd/google-drive-sync.env" ~/.config/systemd/user/google-drive-sync.env
+   ```
+5. timer を有効化する
+   ```shell
+   systemctl --user daemon-reload
+   systemctl --user enable --now google-drive-sync.timer
+   ```
+6. 状態を確認する
+   ```shell
+   systemctl --user list-timers --all
+   systemctl --user status google-drive-sync.timer
+   systemctl --user status google-drive-sync.service
+   ```
+
+### Logs
+
+`systemd` で実行したログは `journalctl` で確認できる。
+
+```shell
+journalctl --user -u google-drive-sync.service
+journalctl --user -u google-drive-sync.service --since today
+journalctl --user -u google-drive-sync.service -f
+```
+
+手動で1回だけ試す場合:
+
+```shell
+systemctl --user start google-drive-sync.service
+systemctl --user status google-drive-sync.service
+```
+
+注意:
+- `link` 方式では、このリポジトリを移動したり削除したりすると unit の参照先が壊れる
+- `google-drive-sync.env` のシンボリックリンクも、このリポジトリを移動したり削除したりすると参照先が壊れる
+- 配置場所を変えた場合は、あらためて `systemctl --user link ...` を実行し直す
 
 ## Recovery
 
