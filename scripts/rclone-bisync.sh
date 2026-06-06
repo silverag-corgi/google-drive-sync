@@ -4,7 +4,7 @@ set -euo pipefail
 
 LOCAL_DIR="${LOCAL_DIR:-$HOME/workspace/GoogleDrive}"
 REMOTE_DIR="${REMOTE_DIR:-google-drive:}"
-CHECK_ACCESS_MARKER="RCLONE_TEST"
+CHECK_ACCESS_MARKER="${CHECK_ACCESS_MARKER:-RCLONE_TEST}"
 
 FIRST_RUN="false"
 DRY_RUN="false"
@@ -25,6 +25,7 @@ Environment variables:
   Required:
     LOCAL_DIR                     Local sync directory. Default: $HOME/workspace/GoogleDrive
     REMOTE_DIR                    Remote sync directory. Default: google-drive:
+    CHECK_ACCESS_MARKER           Filename used by --check-access. Default: RCLONE_TEST
 EOF
 }
 
@@ -68,7 +69,10 @@ build_args() {
   if [[ "$FIRST_RUN" == "true" ]]; then
     ARGS+=(--resync)
   else
-    ARGS+=(--check-access)
+    ARGS+=(
+      --check-access
+      --check-filename "$CHECK_ACCESS_MARKER"
+    )
   fi
 
   if [[ "$DRY_RUN" == "true" ]]; then
