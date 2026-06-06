@@ -7,7 +7,7 @@
 - `scripts/rclone-bisync.sh`
   - `--first-run` を付けると初回同期として `--resync` を実行
   - `--first-run` の本実行時に `LOCAL_DIR` を自動作成
-  - `--first-run` の本実行時に `RCLONE_TEST` を両側へ自動作成
+  - `--first-run` の本実行時に `CHECK_ACCESS_MARKER` を両側へ自動作成
   - `--dry-run` を付けると変更内容だけ確認して実際の同期はしない
   - `--create-empty-src-dirs` を付けると空ディレクトリも同期対象に含める
   - 引数なしでは2回目以降の通常同期を実行
@@ -23,6 +23,7 @@
 - Google Docs / Sheets / Slides などの Google 系ドキュメントはローカル側へ `link.html` として同期する
 - 競合時は自動解決せず、`rclone bisync` の競合エラーとして停止させる
 - 2回目以降の通常実行では `--check-access` を使う
+- `CHECK_ACCESS_MARKER` で `--check-access` 用の確認ファイル名を上書きできる
 
 ## Setup
 
@@ -47,6 +48,7 @@
 ```bash
 export LOCAL_DIR="/path/to/local"
 export REMOTE_DIR="mydrive:folder/path"
+export CHECK_ACCESS_MARKER="RCLONE_TEST"
 ./scripts/rclone-bisync.sh --first-run
 ```
 
@@ -55,6 +57,7 @@ export REMOTE_DIR="mydrive:folder/path"
 ```bash
 export LOCAL_DIR="/path/to/local"
 export REMOTE_DIR="mydrive:folder/path"
+export CHECK_ACCESS_MARKER="RCLONE_TEST"
 ./scripts/rclone-bisync.sh
 ```
 
@@ -63,6 +66,7 @@ export REMOTE_DIR="mydrive:folder/path"
 ```bash
 export LOCAL_DIR="/path/to/local"
 export REMOTE_DIR="mydrive:folder/path"
+export CHECK_ACCESS_MARKER="RCLONE_TEST"
 ./scripts/rclone-bisync.sh --dry-run
 ```
 
@@ -102,6 +106,7 @@ export REMOTE_DIR="mydrive:folder/path"
 3. `systemd/google-drive-sync.env` を環境に合わせて修正する
    - `LOCAL_DIR` には絶対パスを書く
    - `REMOTE_DIR` には `mydrive:` や `mydrive:folder/path` のような rclone remote を書く
+   - `CHECK_ACCESS_MARKER` は必要なら確認ファイル名を上書きする
    - `WORKING_DIRECTORY` にはこのリポジトリの絶対パスを書く
    - `EXEC_START` には `scripts/rclone-bisync.sh` の絶対パスを書く
 4. `systemd --user` 設定ディレクトリへシンボリックリンクを作成する
@@ -151,4 +156,4 @@ systemctl --user status google-drive-sync.service
 ```
 
 通常実行で `--check-access` エラーが出る場合は、
-`RCLONE_TEST` を削除していないか確認した上で `./scripts/rclone-bisync.sh --first-run` を再実行する。
+`CHECK_ACCESS_MARKER` で指定している確認ファイルを削除していないか確認した上で `./scripts/rclone-bisync.sh --first-run` を再実行する。
