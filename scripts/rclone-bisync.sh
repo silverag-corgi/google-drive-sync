@@ -86,8 +86,9 @@ prepare_first_run() {
   fi
 
   mkdir -p "$LOCAL_DIR"
-  touch "$LOCAL_DIR/$CHECK_ACCESS_MARKER"
   rclone touch "$REMOTE_DIR$CHECK_ACCESS_MARKER"
+  rm -f "$LOCAL_DIR/$CHECK_ACCESS_MARKER"
+  rclone copyto "$REMOTE_DIR$CHECK_ACCESS_MARKER" "$LOCAL_DIR/$CHECK_ACCESS_MARKER"
 }
 
 main() {
