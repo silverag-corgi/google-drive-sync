@@ -10,6 +10,7 @@ FIRST_RUN="false"
 DRY_RUN="false"
 CREATE_EMPTY_SRC_DIRS="false"
 ARGS=()
+RECOVERABLE_BISYNC_ERROR="ERROR : Bisync aborted. Must run --resync to recover."
 
 show_usage() {
   cat <<EOF
@@ -95,11 +96,42 @@ prepare_first_run() {
   rclone copyto "$REMOTE_DIR$CHECK_ACCESS_MARKER" "$LOCAL_DIR/$CHECK_ACCESS_MARKER"
 }
 
+run_rclone() {
+  local log_file="$(mktemp)"
+
+  # 最初の同期失敗をその場で終了せず終了コードを確認し、状態ファイル不足の時だけ1回だけ再試行する
+  set +e
+  rclone "${ARGS[@]}" 2>&1 | tee "$log_file"
+  local status=$?
+  set -e
+
+  if [[ "$status" -ne 0 ]] && grep -Fq "$RECOVERABLE_BISYNC_ERROR" "$log_file"; then
+    if [[ "$FIRST_RUN" == "true" ]]; then
+      rm -f "$log_file"
+      return "$status"
+    fi
+
+    echo "Bisync state files were missing or invalid. Retrying once with --resync..." >&2
+    FIRST_RUN="true"
+    build_args
+    prepare_first_run
+
+    # 再試行時も終了コードを自前で受けて、フォールバック後の最終結果をそのまま返す
+    set +e
+    rclone "${ARGS[@]}" 2>&1 | tee -a "$log_file"
+    status=$?
+    set -e
+  fi
+
+  rm -f "$log_file"
+  return "$status"
+}
+
 main() {
   parse_args "$@"
   build_args
   prepare_first_run
-  exec rclone "${ARGS[@]}"
+  run_rclone
 }
 
 main "$@"
