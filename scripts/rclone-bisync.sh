@@ -62,29 +62,37 @@ build_args() {
     bisync
     "$LOCAL_DIR"
     "$REMOTE_DIR"
+    # Google ドキュメント系はローカルへ link.html としてエクスポートする
     --drive-export-formats link.html
+    # 差分転送の前にチェックを完了させ、途中反映を避ける
     --check-first
     # 前回中断時の作業ファイルから可能な範囲で自動復旧する
     --recover
     # 軽微なエラー後も次回以降の実行を継続しやすくする
     --resilient
+    # bisync の進行状況と判断材料をログへ詳しく出す
     --verbose
   )
 
   if [[ "$FIRST_RUN" == "true" ]]; then
+    # 初回同期や状態破損からの復旧では基準一覧を作り直す
     ARGS+=(--resync)
   else
     ARGS+=(
+      # 想定した確認ファイルが両側にあることを事前確認する
       --check-access
+      # --check-access で使う確認ファイル名を明示する
       --check-filename "$CHECK_ACCESS_MARKER"
     )
   fi
 
   if [[ "$DRY_RUN" == "true" ]]; then
+    # 実際の変更は行わず、差分確認だけ行う
     ARGS+=(--dry-run)
   fi
 
   if [[ "$CREATE_EMPTY_SRC_DIRS" == "true" ]]; then
+    # 空ディレクトリも同期対象に含める
     ARGS+=(--create-empty-src-dirs)
   fi
 }
