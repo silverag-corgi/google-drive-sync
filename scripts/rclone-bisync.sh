@@ -64,6 +64,10 @@ build_args() {
     "$REMOTE_DIR"
     --drive-export-formats link.html
     --check-first
+    # 前回中断時の作業ファイルから可能な範囲で自動復旧する
+    --recover
+    # 軽微なエラー後も次回以降の実行を継続しやすくする
+    --resilient
     --verbose
   )
 
