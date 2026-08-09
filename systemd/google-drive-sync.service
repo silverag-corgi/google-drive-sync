@@ -3,8 +3,12 @@ Description=Google Drive bisync
 Documentation=https://rclone.org/commands/rclone_bisync/
 Wants=network-online.target
 After=network-online.target
+StartLimitIntervalSec=15min
+StartLimitBurst=3
 
 [Service]
 Type=oneshot
 EnvironmentFile=%h/.config/systemd/user/google-drive-sync.env
 ExecStart=/usr/bin/env bash -lc 'cd "$WORKING_DIRECTORY" && exec "$EXEC_START"'
+Restart=on-failure
+RestartSec=2min
